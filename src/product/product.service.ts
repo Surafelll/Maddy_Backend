@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -14,6 +15,15 @@ export class ProductService {
   // Create a new product
   async create(createProductDto: CreateProductDto) {
     try {
+      // Check if the product already exists in stock by name
+      const existingProduct = await this.prisma.product.findUnique({
+        where: { name: createProductDto.name },
+      });
+
+      if (existingProduct) {
+        throw new ConflictException('Product is already in stock');
+      }
+
       // Ensure expiryDate is correctly formatted if provided
       const expiryDate = createProductDto.expiryDate
         ? new Date(createProductDto.expiryDate).toISOString()
@@ -27,6 +37,9 @@ export class ProductService {
       });
       return product;
     } catch (error) {
+      if (error instanceof ConflictException) {
+        throw error;
+      }
       throw new BadRequestException('Invalid product data', error.message);
     }
   }

@@ -10,26 +10,25 @@ generator client {
 
 // Product model
 model Product {
-    id          Int       @id @default(autoincrement()) // Unique ID for each product
-    name        String // Name of the product
-    description String // Description of the product
-    price       Float // Price of the product
-    quantity    Int // Quantity available in stock
-    imageUrl    String? // Optional: URL or path to the product image
-    expiryDate  DateTime? // Optional: Expiry date for perishable products
-    categoryId  Int // Foreign key to Category
-    createdAt   DateTime  @default(now()) // Timestamp when the product is created
-    updatedAt   DateTime  @updatedAt // Timestamp when the product is updated
+    id          Int       @id @default(autoincrement())
+    name        String    @unique // Add @unique here
+    description String
+    price       Float
+    quantity    Int
+    imageUrl    String?
+    expiryDate  DateTime?
+    categoryId  Int
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
 
-    // Relations
-    category     Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade) // The category of the product
-    transactions Transaction[] // All transactions (sales) associated with the product
+    category     Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+    transactions Transaction[]
 }
 
 // Category model
 model Category {
     id          Int     @id @default(autoincrement()) // Unique ID for each category
-    name        String // Name of the category
+    name        String  @unique // Name of the category
     type        String // Type of the category (e.g., Electronics, Groceries)
     description String? // Optional: Description of the category
 
@@ -56,4 +55,11 @@ model Report {
     endDate    DateTime // End date for the report period
     totalSales Float // Total sales during the report period
     createdAt  DateTime @default(now()) // Timestamp when the report is generated
+}
+model Sale {
+  id        Int      @id @default(autoincrement())
+  productId Int      // Reference to product
+  price     Float    // Price per unit
+  quantity  Int      // Number of units sold
+  createdAt DateTime @default(now())
 }

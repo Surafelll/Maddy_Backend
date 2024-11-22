@@ -6,11 +6,13 @@ import {
   Param,
   Put,
   Delete,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -18,30 +20,68 @@ export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create a new category' })
+  @ApiResponse({ status: 201, description: 'Category successfully created.' })
+  @ApiResponse({
+    status: 409,
+    description: 'Category with this name already exists.',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input.' })
   async create(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoryService.create(createCategoryDto);
+    try {
+      return await this.categoryService.create(createCategoryDto);
+    } catch (error) {
+      if (error.message.includes('already exists')) {
+        throw new HttpException(error.message, HttpStatus.CONFLICT);
+      }
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get all categories' })
+  @ApiResponse({ status: 200, description: 'List of categories retrieved.' })
   async findAll() {
-    return this.categoryService.findAll();
+    return await this.categoryService.findAll();
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get a category by ID' })
+  @ApiResponse({ status: 200, description: 'Category found.' })
+  @ApiResponse({ status: 404, description: 'Category not found.' })
   async findOne(@Param('id') id: number) {
-    return this.categoryService.findOne(id);
+    try {
+      return await this.categoryService.findOne(Number(id));
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+    }
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update a category by ID' })
+  @ApiResponse({ status: 200, description: 'Category successfully updated.' })
+  @ApiResponse({ status: 404, description: 'Category not found.' })
+  @ApiResponse({ status: 400, description: 'Invalid input.' })
   async update(
     @Param('id') id: number,
     @Body() updateCategoryDto: UpdateCategoryDto,
   ) {
-    return this.categoryService.update(id, updateCategoryDto);
+    try {
+      return await this.categoryService.update(Number(id), updateCategoryDto);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete a category by ID' })
+  @ApiResponse({ status: 200, description: 'Category successfully deleted.' })
+  @ApiResponse({ status: 404, description: 'Category not found.' })
   async remove(@Param('id') id: number) {
-    return this.categoryService.remove(id);
+    try {
+      return await this.categoryService.remove(Number(id));
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+    }
   }
 }

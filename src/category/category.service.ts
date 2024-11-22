@@ -1,7 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
-import { UpdateCategoryDto } from './dto/update-category.dto'; // New DTO for updating
+import { UpdateCategoryDto } from './dto/update-category.dto'; // DTO for updating
 
 @Injectable()
 export class CategoryService {
@@ -10,6 +14,16 @@ export class CategoryService {
   // Create a category
   async create(createCategoryDto: CreateCategoryDto) {
     try {
+      // Check for an existing category with the same name
+      const existingCategory = await this.prisma.category.findUnique({
+        where: { name: createCategoryDto.name }, // Assuming 'name' is unique
+      });
+
+      if (existingCategory) {
+        throw new ConflictException('Category with this name already exists');
+      }
+
+      // Create the category if it doesn't exist
       const category = await this.prisma.category.create({
         data: {
           name: createCategoryDto.name,
@@ -39,7 +53,7 @@ export class CategoryService {
         where: { id },
       });
       if (!category) {
-        throw new Error(`Category with ID ${id} not found`);
+        throw new NotFoundException(`Category with ID ${id} not found`);
       }
       return category;
     } catch (error) {
@@ -52,7 +66,16 @@ export class CategoryService {
   // Update a category by ID
   async update(id: number, updateCategoryDto: UpdateCategoryDto) {
     try {
-      const category = await this.prisma.category.update({
+      // Check if the category exists
+      const category = await this.prisma.category.findUnique({
+        where: { id },
+      });
+      if (!category) {
+        throw new NotFoundException(`Category with ID ${id} not found`);
+      }
+
+      // Update the category
+      return await this.prisma.category.update({
         where: { id },
         data: {
           name: updateCategoryDto.name,
@@ -60,7 +83,6 @@ export class CategoryService {
           type: updateCategoryDto.type, // Required
         },
       });
-      return category;
     } catch (error) {
       throw new Error(
         `Error updating category with ID ${id}: ${error.message}`,
@@ -74,9 +96,9 @@ export class CategoryService {
       const category = await this.prisma.category.delete({
         where: { id },
       });
-      return category;
+      return { message: 'Category successfully deleted' };
     } catch (error) {
-      throw new Error(
+      throw new NotFoundException(
         `Error deleting category with ID ${id}: ${error.message}`,
       );
     }
