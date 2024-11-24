@@ -5,7 +5,10 @@ import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
+  app.enableCors({
+    origin: 'http://localhost:5173', // Allow frontend origin
+    methods: 'GET,POST,PUT,DELETE', // Specify allowed methods
+  });
   // Set the global prefix for all routes
   app.setGlobalPrefix('api');
 
@@ -24,7 +27,7 @@ async function bootstrap() {
     .setTitle('My API')
     .setDescription('API documentation for all routes in the system')
     .setVersion('1.0')
-    
+
     .build();
 
   // Create Swagger document
