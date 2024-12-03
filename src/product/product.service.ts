@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -14,39 +15,40 @@ export class ProductService {
 
   // Create a new product
   async create(createProductDto: CreateProductDto) {
+    const { name, expiryDate, ...rest } = createProductDto;
+
+    // Check if the product already exists by name
+    const existingProduct = await this.prisma.product.findUnique({
+      where: { name },
+    });
+
+    if (existingProduct) {
+      throw new ConflictException(
+        `Product with name "${name}" already exists.`,
+      );
+    }
+
     try {
-      // Check if the product already exists in stock by name
-      const existingProduct = await this.prisma.product.findUnique({
-        where: { name: createProductDto.name },
-      });
-
-      if (existingProduct) {
-        throw new ConflictException('Product is already in stock');
-      }
-
-      // Ensure expiryDate is correctly formatted if provided
-      const expiryDate = createProductDto.expiryDate
-        ? new Date(createProductDto.expiryDate).toISOString()
-        : undefined;
-
       const product = await this.prisma.product.create({
         data: {
-          ...createProductDto,
-          expiryDate, // Format expiryDate if provided
+          ...rest,
+          name,
+          expiryDate: expiryDate ? new Date(expiryDate) : null,
         },
       });
       return product;
     } catch (error) {
-      if (error instanceof ConflictException) {
-        throw error;
-      }
-      throw new BadRequestException('Invalid product data', error.message);
+      throw new BadRequestException('Failed to create product', error.message);
     }
   }
 
   // Retrieve all products
   async getAll() {
-    return this.prisma.product.findMany();
+    try {
+      return await this.prisma.product.findMany();
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to fetch products');
+    }
   }
 
   // Retrieve a product by its ID
@@ -55,29 +57,34 @@ export class ProductService {
       where: { id },
     });
     if (!product) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
+      throw new NotFoundException(`Product with ID ${id} not found.`);
     }
     return product;
   }
 
   // Update an existing product
   async update(id: number, updateProductDto: UpdateProductDto) {
-    try {
-      // Ensure expiryDate is correctly formatted if provided
-      const expiryDate = updateProductDto.expiryDate
-        ? new Date(updateProductDto.expiryDate).toISOString()
-        : undefined;
+    const { expiryDate, ...rest } = updateProductDto;
 
-      const product = await this.prisma.product.update({
+    // Check if the product exists
+    const productExists = await this.prisma.product.findUnique({
+      where: { id },
+    });
+    if (!productExists) {
+      throw new NotFoundException(`Product with ID ${id} does not exist.`);
+    }
+
+    try {
+      const updatedProduct = await this.prisma.product.update({
         where: { id },
         data: {
-          ...updateProductDto,
-          expiryDate, // Format expiryDate if provided
+          ...rest,
+          expiryDate: expiryDate ? new Date(expiryDate) : undefined,
         },
       });
-      return product;
+      return updatedProduct;
     } catch (error) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
+      throw new BadRequestException('Failed to update product', error.message);
     }
   }
 
@@ -87,9 +94,9 @@ export class ProductService {
       await this.prisma.product.delete({
         where: { id },
       });
-      return { message: 'Product successfully deleted' };
+      return { message: 'Product successfully deleted.' };
     } catch (error) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
+      throw new NotFoundException(`Product with ID ${id} not found.`);
     }
   }
 }

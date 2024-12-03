@@ -10,27 +10,27 @@ generator client {
 
 // Product model
 model Product {
-    id          Int       @id @default(autoincrement())
-    name        String    @unique // Add @unique here
-    description String
-    price       Float
-    quantity    Int
-    imageUrl    String?
-    expiryDate  DateTime?
-    categoryId  Int
-    createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @updatedAt
+    id           Int       @id @default(autoincrement())
+    name         String    @unique // Ensure product name is unique
+    description  String
+    price        Float
+    quantity     Int
+    imageUrl     String?
+    expiryDate   DateTime?
+    categoryName String // Category name reference
+    createdAt    DateTime  @default(now())
+    updatedAt    DateTime  @updatedAt
 
-    category     Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+    category     Category      @relation(fields: [categoryName], references: [name], onDelete: Cascade)
     transactions Transaction[]
 }
 
 // Category model
 model Category {
     id          Int     @id @default(autoincrement()) // Unique ID for each category
-    name        String  @unique // Name of the category
+    name        String  @unique // Ensure category name is unique
     type        String // Type of the category (e.g., Electronics, Groceries)
-    description String? // Optional: Description of the category
+    description String? // Optional description of the category
 
     // Relations
     products Product[] // All products belonging to this category
@@ -56,10 +56,12 @@ model Report {
     totalSales Float // Total sales during the report period
     createdAt  DateTime @default(now()) // Timestamp when the report is generated
 }
+
+// Sale model
 model Sale {
-  id        Int      @id @default(autoincrement())
-  productId Int      // Reference to product
-  price     Float    // Price per unit
-  quantity  Int      // Number of units sold
-  createdAt DateTime @default(now())
+    id        Int      @id @default(autoincrement())
+    productId Int // Reference to product
+    price     Float // Price per unit
+    quantity  Int // Number of units sold
+    createdAt DateTime @default(now())
 }

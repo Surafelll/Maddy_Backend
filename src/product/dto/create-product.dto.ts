@@ -1,12 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsString,
-  IsInt,
-  IsOptional,
-  IsDateString,
-  IsPositive,
-  Min,
-} from 'class-validator';
+import { IsString, IsInt, IsOptional, IsPositive, Min } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateProductDto {
   @ApiProperty({
@@ -23,11 +17,9 @@ export class CreateProductDto {
   @IsString()
   description: string;
 
-  @ApiProperty({
-    description: 'The price of the product',
-    example: 1.99,
-  })
+  @ApiProperty({ description: 'The price of the product', example: 1.99 })
   @IsPositive()
+  @Transform(({ value }) => parseFloat(value)) // Ensure price is a number
   price: number;
 
   @ApiProperty({
@@ -36,13 +28,10 @@ export class CreateProductDto {
   })
   @IsInt()
   @Min(0)
+  @Transform(({ value }) => parseInt(value, 10)) // Ensure quantity is an integer
   quantity: number;
 
-  @ApiProperty({
-    description: 'The URL of the product image',
-    example: 'https://example.com/images/organic-apple.jpg',
-    required: false,
-  })
+  @ApiProperty({ description: 'The URL of the product image', required: false })
   @IsOptional()
   @IsString()
   imageUrl?: string;
@@ -53,13 +42,13 @@ export class CreateProductDto {
     required: false,
   })
   @IsOptional()
-  @IsDateString()
-  expiryDate?: Date;
+  @IsString()
+  expiryDate?: string;
 
   @ApiProperty({
-    description: 'The ID of the category this product belongs to',
-    example: 1,
+    description: 'The category name this product belongs to',
+    example: 'Fruits',
   })
-  @IsInt()
-  categoryId: number;
+  @IsString()
+  categoryName: string;
 }
