@@ -7,9 +7,10 @@ import { CategoryModule } from './category/category.module';
 import { TransactionModule } from './transaction/transaction.module';
 import { PrismaService } from './prisma/prisma.service';
 import { SoldProductModule } from './sold/sold-product.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
-  imports: [ProductModule,CategoryModule,TransactionModule,SoldProductModule], // Register ProductModule
+  imports: [ProductModule,CategoryModule,TransactionModule,SoldProductModule,AuthModule], // Register ProductModule
   controllers: [AppController],
   providers: [AppService,PrismaService],
 })
