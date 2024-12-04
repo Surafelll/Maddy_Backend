@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { User } from '@prisma/client'; // Ensure this is correctly imported
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -18,17 +18,27 @@ export class AuthService {
     });
 
     if (user && (await bcrypt.compare(password, user.password))) {
-      return user; // Return the user if the password matches
+      return user;
     }
 
-    return null; // Return null if credentials are invalid
+    return null;
   }
 
-  // Generate a JWT token for authenticated users
+  // Generate JWT for authenticated users
   async login(user: User) {
-    const payload = { username: user.username, sub: user.id };
+    const payload = { username: user.username, sub: String(user.id) };
     return {
       access_token: this.jwtService.sign(payload),
     };
+  }
+
+  // Validate JWT payload and get the user
+  async validateUserByPayload(payload: {
+    username: string;
+    sub: string;
+  }): Promise<User | null> {
+    return this.prisma.user.findUnique({
+      where: { username: payload.username },
+    });
   }
 }

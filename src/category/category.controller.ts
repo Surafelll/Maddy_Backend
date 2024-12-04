@@ -8,14 +8,18 @@ import {
   Delete,
   HttpException,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { AuthGuard } from '../auth/guards/auth.guard'; // Adjust the path if necessary
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @ApiTags('Categories')
 @Controller('categories')
+// @UseGuards(JwtAuthGuard) // Apply AuthGuard to all endpoints in this controller
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 

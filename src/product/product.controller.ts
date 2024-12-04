@@ -11,6 +11,7 @@ import {
   ValidationPipe,
   UploadedFile,
   UseInterceptors,
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -23,9 +24,12 @@ import {
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { AuthGuard } from '../auth/guards/auth.guard'; // Adjust the path if necessary
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @ApiTags('products')
 @Controller('products')
+// @UseGuards(JwtAuthGuard) // Apply AuthGuard to all endpoints in this controller
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 

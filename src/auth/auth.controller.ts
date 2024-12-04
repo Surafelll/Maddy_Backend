@@ -22,12 +22,13 @@ export class AuthController {
 
     // Validate user credentials
     const user = await this.authService.validateUser(username, password);
+
+    // If user is not found or credentials are invalid, throw an exception
     if (!user) {
-      // If the user is not found or credentials are incorrect, throw an HTTP exception
-      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
 
-    // Generate and return the JWT token
+    // If credentials are valid, generate and return a token
     return this.authService.login(user);
   }
 }

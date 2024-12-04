@@ -1,57 +1,52 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common'; // Global validation pipe
-import { join } from 'path';
-import { ExpressAdapter } from '@nestjs/platform-express';
-import * as express from 'express';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-  // Create the NestJS application instance
-  const app = await NestFactory.create(
-    AppModule,
-    new ExpressAdapter(express()), // Using Express adapter for static file serving
-  );
+  const app = await NestFactory.create(AppModule);
 
-  // Enable Cross-Origin Resource Sharing (CORS)
+  // Enable CORS for frontend access
   app.enableCors({
-    origin: 'http://localhost:5173', // Frontend URL for dev
-    methods: 'GET,POST,PUT,DELETE',
+    origin: 'http://localhost:5173', // Adjust to your frontend URL
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
-  // Set a global prefix for all API routes (e.g., /api/products)
+  // Set a global prefix for all API routes
   app.setGlobalPrefix('api');
 
-  // Enable global validation for all incoming requests
+  // Enable global validation pipes
   app.useGlobalPipes(
     new ValidationPipe({
-      transform: true, // Automatically transform payloads to DTO instances
-      whitelist: true, // Strip properties that are not defined in the DTO
-      forbidNonWhitelisted: true, // Reject requests that have extra properties
-      skipMissingProperties: false, // Ensure that missing properties are rejected
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      skipMissingProperties: false,
     }),
   );
 
-  // Serve static files (uploaded images, etc.)
-  app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
-
-  // Swagger setup for API documentation
+  // Swagger setup
   const config = new DocumentBuilder()
-    .setTitle('My API') // Title of the API
-    .setDescription('API documentation for all routes in the system') // Description
-    .setVersion('1.0') // Version of the API
+    .setTitle('My API') // Set your API title
+    .setDescription('API documentation for all routes in the system') // Add a description
+    .setVersion('1.0') // API version
+    .addBearerAuth({
+      // Configure Bearer token authentication in Swagger
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+      name: 'Authorization',
+      description: 'Enter JWT token',
+      in: 'header',
+    })
     .build();
 
-  // Create the Swagger document
+  // Create Swagger document
   const document = SwaggerModule.createDocument(app, config);
-  
-  // Setup Swagger UI to be available at /api/docs
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('api/docs', app, document); // Swagger endpoint at '/api/docs'
 
-  // Start the application on port 3000
   await app.listen(3000);
-  console.log('Application is running on: http://localhost:3000');
+  console.log('Application is running on: http://localhost:3000/api/docs');
 }
 
-// Bootstrapping the NestJS application
 bootstrap();
