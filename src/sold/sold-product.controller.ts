@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query } from '@nestjs/common';
 import { SoldProductService } from './sold-product.service';
 
 @Controller('sold-products')
@@ -13,9 +13,23 @@ export class SoldProductController {
     return this.soldProductService.sellProducts(saleData.sales);
   }
 
-  // GET method to fetch all sold products
+  // GET method to fetch all sold products with optional filters
   @Get()
-  async getSoldProducts() {
-    return this.soldProductService.getSoldProducts();
+  async getSoldProducts(
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+    @Query('category') category: string,
+    @Query('search') search: string,
+    @Query('minQuantity') minQuantity: number,
+  ) {
+    const filters = {
+      startDate,
+      endDate,
+      category,
+      search,
+      minQuantity: minQuantity ? parseInt(minQuantity.toString()) : undefined,
+    };
+
+    return this.soldProductService.getSoldProducts(filters);
   }
 }

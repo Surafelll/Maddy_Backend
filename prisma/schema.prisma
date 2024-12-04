@@ -37,17 +37,27 @@ model Category {
 
 // SoldProduct model for tracking sales history
 model SoldProduct {
-    id          Int      @id @default(autoincrement())
-    productId   Int // Foreign key to Product
-    productName String // Product name at the time of sale
-    quantity    Int // Quantity sold
+    id          Int      @id @default(autoincrement()) // Auto-generated ID
+    productId   Int // Foreign key to Product (links to the Product model)
+    productName String // Name of the product at the time of sale
+    quantity    Int // Quantity of the product sold
     price       Float // Price per unit at the time of sale
-    totalAmount Float // Total sale amount
-    soldAt      DateTime @default(now())
+    totalAmount Float // Total sale amount (quantity * price)
+    soldAt      DateTime @default(now()) // Date and time of the sale
 
-    // Make these optional temporarily
-    imageUrl     String? // Image URL at the time of sale
-    categoryName String? // Category name at the time of sale
+    imageUrl     String? // Image URL of the product at the time of sale
+    categoryName String? // Category name of the product at the time of sale
 
     product Product @relation(fields: [productId], references: [id])
+
+    @@index([soldAt]) // Index for quick querying of sold products by `soldAt`
+}
+
+// User model for authentication
+model User {
+    id        Int      @id @default(autoincrement())
+    username  String   @unique
+    password  String // Hashed password
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }

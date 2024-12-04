@@ -63,12 +63,41 @@ export class SoldProductService {
     return soldProducts;
   }
 
-  // Method to get all sold products from the database
-  async getSoldProducts() {
+  // Method to get all sold products from the database with optional filters
+  async getSoldProducts(filters: {
+    startDate?: string;
+    endDate?: string;
+    category?: string;
+    search?: string;
+    minQuantity?: number;
+  }) {
+    const { startDate, endDate, category, search, minQuantity } = filters;
+
+    const where: any = {};
+
+    if (startDate) {
+      where.soldAt = { gte: new Date(startDate) };
+    }
+
+    if (endDate) {
+      where.soldAt = { ...where.soldAt, lte: new Date(endDate) };
+    }
+
+    if (category) {
+      where.categoryName = { contains: category, mode: 'insensitive' }; // Case-insensitive search for category
+    }
+
+    if (search) {
+      where.productName = { contains: search, mode: 'insensitive' }; // Case-insensitive search for product name
+    }
+
+    if (minQuantity) {
+      where.quantity = { gte: minQuantity };
+    }
+
     return this.prisma.soldProduct.findMany({
-      orderBy: {
-        soldAt: 'desc', // Sort by the sale date, latest first
-      },
+      where,
+      orderBy: { soldAt: 'desc' }, // Sort by the sale date, latest first
     });
   }
 }
