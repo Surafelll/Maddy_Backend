@@ -8,7 +8,7 @@ async function bootstrap() {
 
   // Enable CORS for frontend access
   app.enableCors({
-    origin: 'http://localhost:5173', // Adjust to your frontend URL
+    origin: true, // Dynamically allow any origin
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
@@ -27,11 +27,10 @@ async function bootstrap() {
 
   // Swagger setup
   const config = new DocumentBuilder()
-    .setTitle('My API') // Set your API title
-    .setDescription('API documentation for all routes in the system') // Add a description
-    .setVersion('1.0') // API version
+    .setTitle('My API')
+    .setDescription('API documentation for all routes in the system')
+    .setVersion('1.0')
     .addBearerAuth({
-      // Configure Bearer token authentication in Swagger
       type: 'http',
       scheme: 'bearer',
       bearerFormat: 'JWT',
@@ -41,12 +40,15 @@ async function bootstrap() {
     })
     .build();
 
-  // Create Swagger document
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document); // Swagger endpoint at '/api/docs'
+  SwaggerModule.setup('api/docs', app, document);
 
-  await app.listen(3000);
-  console.log('Application is running on: http://localhost:3000/api/docs');
+  // Use dynamic port for Render
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+
+  console.log(`Application is running on: http://localhost:${port}/api/docs`);
 }
 
 bootstrap();
+
